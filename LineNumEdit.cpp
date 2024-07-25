@@ -1,5 +1,7 @@
 // LineNumEdit.cpp --- textbox with line numbers
 
+#define LINENUMEDIT_IMPL
+#define UNICODE
 #include "LineNumEdit.hpp"
 
 static INT getLogicalLineIndexFromCharIndex(LPCTSTR psz, INT ich)
@@ -20,8 +22,8 @@ static INT getLogicalLineIndexFromCharIndex(LPCTSTR psz, INT ich)
 
 LineNumStatic::LineNumStatic(HWND hwnd)
     : LineNumBase(hwnd)
-    , m_rgbText(::GetSysColor(COLOR_WINDOWTEXT))
-    , m_rgbBack(::GetSysColor(COLOR_3DFACE))
+    , m_rgbText(RGB(255, 255, 255))
+    , m_rgbBack(RGB(34, 37, 42))
     , m_linedelta(1)
     , m_hbm(NULL)
     , m_siz { 0, 0 }
@@ -99,9 +101,16 @@ void LineNumStatic::OnDrawClient(HWND hwnd, HDC hDC)
         uMsg = WM_CTLCOLORSTATIC;
     else
         uMsg = WM_CTLCOLOREDIT;
+
     HBRUSH hbr = reinterpret_cast<HBRUSH>(
         ::SendMessage(GetParent(hwndEdit), uMsg,
-                      reinterpret_cast<WPARAM>(hDC), reinterpret_cast<LPARAM>(hwndEdit)));
+                      reinterpret_cast<WPARAM>(hdcMem), reinterpret_cast<LPARAM>(hwndEdit)));
+
+    HBRUSH hbr2 = reinterpret_cast<HBRUSH>(
+        ::SendMessage(GetParent(hwndEdit), WM_CTLLNESTATICCOLOR,
+            reinterpret_cast<WPARAM>(hdcMem), reinterpret_cast<LPARAM>(hwndEdit)));
+    if (hbr2) hbr = hbr2;
+
     ::FillRect(hdcMem, &rcClient, hbr);
 
     // get top margin and line height
@@ -118,16 +127,11 @@ void LineNumStatic::OnDrawClient(HWND hwnd, HDC hDC)
     siz.cx -= leftmargin;
 
     // fill background
-    hbr = ::CreateSolidBrush(m_rgbBack);
-    ::FillRect(hdcMem, &rcClient, hbr);
-    ::DeleteObject(hbr);
+    //::FillRect(hdcMem, &rcClient, (HBRUSH)GetStockObject(DC_BRUSH));
 
     // right line
-    HPEN hPen = ::CreatePen(PS_SOLID, 0, m_rgbText);
-    HGDIOBJ hPenOld = ::SelectObject(hdcMem, hPen);
     ::MoveToEx(hdcMem, rcClient.right - 1, rcClient.top, NULL);
     ::LineTo(hdcMem, rcClient.right - 1, rcClient.bottom);
-    ::DeleteObject(::SelectObject(hdcMem, hPenOld));
 
     // draw lines
     WCHAR szText[32];
@@ -169,19 +173,19 @@ void LineNumStatic::OnDrawClient(HWND hwnd, HDC hDC)
                 if (hProp &&
                     (ich < cch || iOldLogicalLine < iLogicalLine || iLogicalLine < cLogicalLines))
                 {
-                    COLORREF rgbBack = (COLORREF(reinterpret_cast<ULONG_PTR>(hProp)) & 0xFFFFFF);
-                    HBRUSH hbr = ::CreateSolidBrush(rgbBack);
+                    /*COLORREF rgbBack = (COLORREF(reinterpret_cast<ULONG_PTR>(hProp)) & 0xFFFFFF);
+                    HBRUSH hbr = ::CreateSolidBrush(rgbBack);*/
                     ::FillRect(hdcMem, &rc, hbr);
                     ::DeleteObject(hbr);
-                    INT value = (GetRValue(rgbBack) + GetGValue(rgbBack) + GetBValue(rgbBack)) / 3;
+                    /*INT value = (GetRValue(rgbBack) + GetGValue(rgbBack) + GetBValue(rgbBack)) / 3;
                     if (value < 255 / 3)
                         ::SetTextColor(hdcMem, RGB(255, 255, 255));
                     else
-                        ::SetTextColor(hdcMem, RGB(0, 0, 0));
+                        ::SetTextColor(hdcMem, RGB(0, 0, 0));*/
                 }
                 else
                 {
-                    ::SetTextColor(hdcMem, m_rgbText);
+                    //::SetTextColor(hdcMem, m_rgbText);
                 }
 
                 // draw line text
