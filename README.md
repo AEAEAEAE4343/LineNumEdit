@@ -1,3 +1,6 @@
+# Fork by Leet
+I forked the project to change how colors are rendered. Main use of this is in DuiKit.
+
 # LineNumEdit by katahiromz
 
 LineNumEdit is a C++/Win32 library that implements "textbox with line numbers".
